@@ -1,0 +1,12 @@
+GET https://koronapay.com/transfers/online/api/transfers/tariffs
+    ?sendingCountryId=RUS
+    &sendingCurrencyId=810
+    &receivingCountryId=TUR
+    &receivingCurrencyId=840
+    &paymentMethod=debitCard
+    &receivingAmount=2000
+    &receivingMethod=cash
+    &paidNotificationEnabled=true
+
+
+# GET https://koronapay.com/transfers/online/api/transfers/tariffs?sendingCountryId=RUS&sendingCurrencyId=810&receivingCountryId=TUR&receivingCurrencyId=840&paymentMethod=debitCard&receivingAmount=1&receivingMethod=cash&paidNotificationEnabled=0
