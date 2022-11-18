@@ -1,16 +1,20 @@
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+
+import requests
+from pydantic import BaseModel
+
 from app import app
 from exceptions import CantGetRates
 
-from dataclasses import dataclass
-from datetime import datetime
-import requests
 
-
+@dataclass
 class Transfer():
+    id: int
     sending_country_id: str = 'RUS'
     sending_currency_id: int = 810
     receiving_country_id: str = 'TUR'
-    receiving_currency_id = 840
+    receiving_currency_id: int = 840
     paid_notification_enabled: bool = 1
     receiving_amount: int = 1
     payment_method: str = 'debitCard'
@@ -19,28 +23,20 @@ class Transfer():
 
 @dataclass
 class Rate():
-    dt: datetime = None
-    sending_country_id: str = 'RUS'
-    sending_currency_id: int = 810
-    receiving_country_id: str = 'TUR'
-    receiving_currency_id = 840
-    paid_notification_enabled: bool = 0
-    receiving_amount: int = 1
-    payment_method: str = 'debitCard'
-    receiving_method: str = 'cash'
-
+    transfer: Transfer
+    dt: datetime = datetime.now()
     exchange_rate: float = 0.0
 
     def _get_current_rate_response(self) -> requests.Response:
         url = app.config['KORONAPAY_TRANSERS_TARIFFS_TEMPLATE_URL'].format(
-            sending_country_id=self.sending_country_id,
-            sending_currency_id=self.sending_currency_id,
-            receiving_country_id=self.receiving_country_id,
-            receiving_currency_id=self.receiving_currency_id,
-            paid_notification_enabled=self.paid_notification_enabled,
-            receiving_amount=self.receiving_amount,
-            payment_method=self.payment_method,
-            receiving_method=self.receiving_method
+            sending_currency_id=self.transfer.sending_currency_id,
+            sending_country_id=self.transfer.sending_country_id,
+            receiving_country_id=self.transfer.receiving_country_id,
+            receiving_currency_id=self.transfer.receiving_currency_id,
+            paid_notification_enabled=self.transfer.paid_notification_enabled,
+            receiving_amount=self.transfer.receiving_amount,
+            payment_method=self.transfer.payment_method,
+            receiving_method=self.transfer.receiving_method
         )
 
         try:
@@ -67,3 +63,44 @@ class Rate():
 
     def __post_init__(self) -> None:
         self.get_current_rate()
+
+
+class RatesState(BaseModel):
+    updated: datetime = None
+    rates: list[Rate] = None
+
+    def update(self) -> None:
+        if not self.updated or datetime.today() - self.updated > timedelta(seconds=app.config['REQUEST_CACHE_TIMEOUT_SEC']):
+            try:
+                self.rates = [Rate(t) for t in transfers]
+                self.updated = datetime.today()
+            except:
+                raise CantGetRates
+
+
+transfers = [
+    # RUB->USD from RUS->TUR
+    Transfer(
+        id=1,
+        sending_country_id='RUS',
+        sending_currency_id=810,
+        receiving_country_id='TUR',
+        receiving_currency_id=840,
+        paid_notification_enabled=True,
+        receiving_amount=1,
+        payment_method='debitCard',
+        receiving_method='cash'),
+
+    # RUB->TRY from RUS->TUR
+    Transfer(
+        id=2,
+        sending_country_id='RUS',
+        sending_currency_id=810,
+        receiving_country_id='TUR',
+        receiving_currency_id=949,
+        paid_notification_enabled=True,
+        receiving_amount=1,
+        payment_method='debitCard',
+        receiving_method='cash')]
+
+rates_state = RatesState()

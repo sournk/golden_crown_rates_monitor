@@ -1,8 +1,23 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1>Current Rate is:</h1>
-    <div>
-            {{ var1 }}
+    <div class="current_rates">
+        <h1>Current Rates Are:</h1>
+        <div class="updated">
+            {{ rates_state.updated }}
+        </div>
+        <ul class="rates">
+            {% for rate in rates_state.rates %}
+                <li class="rate">
+                    <span>{{ rate.transfer.sending_country_id }}</span>
+                    <span>{{ rate.transfer.sending_currency_id }}</span>
+                    >
+                    <span>{{ rate.transfer.receiving_country_id }}</span>
+                    <span>{{ rate.transfer.receiving_currency_id }}</span>
+                    :
+                    <strong><span>{{ rate.exchange_rate }}</span></strong>
+                </li>
+            {% endfor %}
+        </ul>
     </div>
 {% endblock %}
