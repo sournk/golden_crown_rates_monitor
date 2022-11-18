@@ -1,23 +1,76 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <div class="current_rates">
-        <h1>Current Rates Are:</h1>
-        <div class="updated">
-            {{ rates_state.updated }}
-        </div>
-        <ul class="rates">
-            {% for rate in rates_state.rates %}
-                <li class="rate">
-                    <span>{{ rate.transfer.sending_country_id }}</span>
-                    <span>{{ rate.transfer.sending_currency_id }}</span>
-                    >
-                    <span>{{ rate.transfer.receiving_country_id }}</span>
-                    <span>{{ rate.transfer.receiving_currency_id }}</span>
-                    :
-                    <strong><span>{{ rate.exchange_rate }}</span></strong>
+    <nav class="navbar navbar-expand-lg bg-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <img title="Золотая Корона" src="https://koronapay.com/transfers/online/static/images/logo-l.svg" height="24">
+                KoronaPay Exchange Rates Monitor by @sournk
+            </a>
+            
+            <!-- <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                <a class="nav-link active" aria-current="page" href="#">Home</a>
                 </li>
-            {% endfor %}
-        </ul>
+                <li class="nav-item">
+                <a class="nav-link" href="#">Link</a>
+                </li>
+                <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Dropdown
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#">Action</a></li>
+                    <li><a class="dropdown-item" href="#">Another action</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#">Something else here</a></li>
+                </ul>
+                </li>
+                <li class="nav-item">
+                <a class="nav-link disabled">Disabled</a>
+                </li>
+            </ul> 
+            <form class="d-flex" role="search">
+                <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+                <button class="btn btn-outline-success" type="submit">Search</button>
+            </form>
+            </div> -->
+        </div>
+    </nav>
+
+    <div class="current_rates container">
+        <div class="row mt-5">
+            <div class="col">
+                <h1>Current Rates Are:</h1>
+            </div>
+        </div>
+
+        <div class="rates row">
+            <div class="col">
+                <ul>
+                    {% for rate in rates_state.rates %}
+                    <li class="rate">
+                        <span>{{ rate.transfer.sending_country_id }}</span>
+                        <span>{{ rate.transfer.sending_currency_id }}</span>
+                        >
+                        <span>{{ rate.transfer.receiving_country_id }}</span>
+                        <span>{{ rate.transfer.receiving_currency_id }}</span>
+                        :
+                        <strong><span>{{ rate.exchange_rate }}</span></strong>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        
+        <div class="updated row">
+            <div class="col">
+                <p class="fst-italic fw-light text-muted">Last update: {{ rates_state.updated }}</p>
+            </div>
+        </div>
     </div>
 {% endblock %}

@@ -4,18 +4,17 @@ import os
 class Config():
     SECRET_KEY = os.getenv(
         'SECRET_KEY') or 'jL2L#B3R2UGK^xJ22dy1sDpG9GMpwDx9tbBF*zP7m4irWdORLv'
-    
+
     KORONAPAY_TRANSERS_TARIFFS_TEMPLATE_URL = ('https://koronapay.com/transfers/online/api/transfers/tariffs'
-                '?sendingCountryId={sending_country_id}'
-                '&sendingCurrencyId={sending_currency_id}'
-                '&receivingCountryId={receiving_country_id}'
-                '&receivingCurrencyId={receiving_currency_id}'
-                '&paymentMethod={payment_method}'
-                '&receivingAmount={receiving_amount}'
-                '&receivingMethod={receiving_method}'
-                '&paidNotificationEnabled={paid_notification_enabled}'
-                )
+                                               '?sendingCountryId={sending_country_id}'
+                                               '&sendingCurrencyId={sending_currency_id}'
+                                               '&receivingCountryId={receiving_country_id}'
+                                               '&receivingCurrencyId={receiving_currency_id}'
+                                               '&paymentMethod={payment_method}'
+                                               '&receivingAmount={receiving_amount}'
+                                               '&receivingMethod={receiving_method}'
+                                               '&paidNotificationEnabled={paid_notification_enabled}'
+                                               )
     REQUEST_USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36'
     REQUEST_CACHE_TIMEOUT_SEC = os.getenv(
         'REQUEST_CACHE_TIMEOUT') or 5*60
-
