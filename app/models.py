@@ -16,7 +16,7 @@ class Transfer():
     receiving_country_id: str = 'TUR'
     receiving_currency_id: int = 840
     paid_notification_enabled: bool = 1
-    receiving_amount: int = 1
+    receiving_amount: int = 100
     payment_method: str = 'debitCard'
     receiving_method: str = 'cash'
 
@@ -38,6 +38,8 @@ class Rate():
             payment_method=self.transfer.payment_method,
             receiving_method=self.transfer.receiving_method
         )
+
+        print(url)
 
         try:
             headers = {
@@ -87,7 +89,6 @@ transfers = [
         receiving_country_id='TUR',
         receiving_currency_id=840,
         paid_notification_enabled=True,
-        receiving_amount=1,
         payment_method='debitCard',
         receiving_method='cash'),
 
@@ -99,7 +100,6 @@ transfers = [
         receiving_country_id='TUR',
         receiving_currency_id=949,
         paid_notification_enabled=True,
-        receiving_amount=1,
         payment_method='debitCard',
         receiving_method='cash')]
 
