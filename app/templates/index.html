@@ -55,10 +55,14 @@
                     {% for rate in rates_state.rates %}
                     <li class="rate">
                         <span>{{ rate.transfer.sending_country_id }}</span>
-                        <span>{{ rate.transfer.sending_currency_id }}</span>
                         >
                         <span>{{ rate.transfer.receiving_country_id }}</span>
-                        <span>{{ rate.transfer.receiving_currency_id }}</span>
+                        :
+                        <!-- <span>{{ rate.transfer.sending_currency_id }}</span> -->
+                        <span>{{ rate.transfer.sending_currency_code }}</span>
+                        >
+                        <!-- <span>{{ rate.transfer.receiving_currency_id }}</span> -->
+                        <span>{{ rate.transfer.receiving_currency_code }}</span>
                         :
                         <strong><span>{{ rate.exchange_rate }}</span></strong>
                     </li>

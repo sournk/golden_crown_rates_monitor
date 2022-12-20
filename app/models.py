@@ -13,8 +13,14 @@ class Transfer():
     id: int
     sending_country_id: str = 'RUS'
     sending_currency_id: int = 810
+    sending_currency_code: str = None  # Ex='RUB'
+    sending_currency_name: str = None  # Ex='Российский рубль'
+
     receiving_country_id: str = 'TUR'
     receiving_currency_id: int = 840
+    receiving_currency_code: str = None  # Ex='USD'
+    receiving_currency_name: str = None  # Ex='Доллар США'
+
     paid_notification_enabled: bool = 1
     receiving_amount: int = 100
     payment_method: str = 'debitCard'
@@ -39,8 +45,6 @@ class Rate():
             receiving_method=self.transfer.receiving_method
         )
 
-        print(url)
-
         try:
             headers = {
                 'User-Agent': app.config['REQUEST_USER_AGENT']}
@@ -51,11 +55,28 @@ class Rate():
         except:
             raise CantGetRates
 
+    def _update_transfer_labels(self,
+                                sending_currency_code: str,
+                                sending_currency_name: str,
+                                receiving_currency_code: str,
+                                receiving_currency_name: str) -> None:
+        ''' Update Transfer fields with sending and reciving currencies labels '''
+        self.transfer.sending_currency_code = sending_currency_code
+        self.transfer.sending_currency_name = sending_currency_name
+
+        self.transfer.receiving_currency_code = receiving_currency_code
+        self.transfer.receiving_currency_name = receiving_currency_name
+
     def get_current_rate(self) -> None:
         try:
             curr_rate_response = self._get_current_rate_response()
             self.exchange_rate = float(
                 curr_rate_response.json()[0]['exchangeRate'])
+            self._update_transfer_labels(
+                curr_rate_response.json()[0]['sendingCurrency']['code'],
+                curr_rate_response.json()[0]['sendingCurrency']['name'],
+                curr_rate_response.json()[0]['receivingCurrency']['code'],
+                curr_rate_response.json()[0]['receivingCurrency']['name'])
             self.dt = datetime.today()
         except:
             raise CantGetRates
@@ -74,13 +95,13 @@ class RatesState(BaseModel):
     def update(self) -> None:
         if not self.updated or datetime.today() - self.updated > timedelta(seconds=app.config['REQUEST_CACHE_TIMEOUT_SEC']):
             try:
-                self.rates = [Rate(t) for t in transfers]
+                self.rates = [Rate(t) for t in transfers_to_monitor]
                 self.updated = datetime.today()
             except:
                 raise CantGetRates
 
 
-transfers = [
+transfers_to_monitor = [
     # RUB->USD from RUS->TUR
     Transfer(
         id=1,
