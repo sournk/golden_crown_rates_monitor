@@ -12,6 +12,7 @@ def rates():
 def index():
     try:
         rates_state.update()
+        rates_state.save_to_db()
         return render_template('index.html', rates_state=rates_state.dict())
     except:
         abort(500)

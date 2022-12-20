@@ -5,7 +5,7 @@ class Config():
     SECRET_KEY = os.getenv(
         'SECRET_KEY') or 'jL2L#B3R2UGK^xJ22dy1sDpG9GMpwDx9tbBF*zP7m4irWdORLv'
 
-    KORONAPAY_TRANSERS_TARIFFS_TEMPLATE_URL = ('https://koronapay.com/transfers/online/api/transfers/tariffs'
+    KORONAPAY_TRANSFERS_TARIFFS_TEMPLATE_URL = ('https://koronapay.com/transfers/online/api/transfers/tariffs'
                                                '?sendingCountryId={sending_country_id}'
                                                '&sendingCurrencyId={sending_currency_id}'
                                                '&receivingCountryId={receiving_country_id}'

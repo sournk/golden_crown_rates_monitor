@@ -4,12 +4,16 @@ from datetime import datetime, timedelta
 import requests
 from pydantic import BaseModel
 
+from tinydb import TinyDB, Query
+from tinydb.storages import JSONStorage
+from tinydb_serialization import SerializationMiddleware
+from tinydb_serialization.serializers import DateTimeSerializer
+
 from app import app
-from exceptions import CantGetRates
+from exceptions import CantGetRates, SaveToDBError
 
 
-@dataclass
-class Transfer():
+class Transfer(BaseModel):
     id: int
     sending_country_id: str = 'RUS'
     sending_currency_id: int = 810
@@ -27,14 +31,13 @@ class Transfer():
     receiving_method: str = 'cash'
 
 
-@dataclass
-class Rate():
+class Rate(BaseModel):
     transfer: Transfer
     dt: datetime = datetime.now()
     exchange_rate: float = 0.0
 
     def _get_current_rate_response(self) -> requests.Response:
-        url = app.config['KORONAPAY_TRANSERS_TARIFFS_TEMPLATE_URL'].format(
+        url = app.config['KORONAPAY_TRANSFERS_TARIFFS_TEMPLATE_URL'].format(
             sending_currency_id=self.transfer.sending_currency_id,
             sending_country_id=self.transfer.sending_country_id,
             receiving_country_id=self.transfer.receiving_country_id,
@@ -81,10 +84,8 @@ class Rate():
         except:
             raise CantGetRates
 
-    def save_to_db(self):
-        pass
-
-    def __post_init__(self) -> None:
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
         self.get_current_rate()
 
 
@@ -95,10 +96,20 @@ class RatesState(BaseModel):
     def update(self) -> None:
         if not self.updated or datetime.today() - self.updated > timedelta(seconds=app.config['REQUEST_CACHE_TIMEOUT_SEC']):
             try:
-                self.rates = [Rate(t) for t in transfers_to_monitor]
+                self.rates = [Rate(transfer=t) for t in transfers_to_monitor]
                 self.updated = datetime.today()
-            except:
+            except Exception as e:
                 raise CantGetRates
+
+    def save_to_db(self):
+        try:
+            serialization = SerializationMiddleware(JSONStorage)
+            serialization.register_serializer(DateTimeSerializer(), 'TinyDate')
+
+            db = TinyDB('db.json', storage=serialization)
+            db.insert(self.dict())
+        except Exception as e:
+            raise SaveToDBError
 
 
 transfers_to_monitor = [
