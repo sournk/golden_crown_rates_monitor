@@ -94,7 +94,7 @@ class RatesState(BaseModel):
     rates: list[Rate] = None
 
 
-class RateStateHandler():
+class RatesStateHandler():
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
