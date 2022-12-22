@@ -10,7 +10,7 @@ from tinydb_serialization import SerializationMiddleware
 from tinydb_serialization.serializers import DateTimeSerializer
 
 from app import app
-from exceptions import CantGetRates, SaveToDBError
+from exceptions import CantGetRatesFromAPI, SaveRatesToDBError, LoadRatesFromDBError
 
 
 class Transfer(BaseModel):
@@ -53,10 +53,10 @@ class Rate(BaseModel):
                 'User-Agent': app.config['REQUEST_USER_AGENT']}
             res = requests.get(url, headers=headers)
             if res.status_code != 200:
-                raise CantGetRates
+                raise CantGetRatesFromAPI
             return res
         except:
-            raise CantGetRates
+            raise CantGetRatesFromAPI
 
     def _update_transfer_labels(self,
                                 sending_currency_code: str,
@@ -82,7 +82,7 @@ class Rate(BaseModel):
                 curr_rate_response.json()[0]['receivingCurrency']['name'])
             self.dt = datetime.today()
         except:
-            raise CantGetRates
+            raise CantGetRatesFromAPI
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
@@ -93,23 +93,40 @@ class RatesState(BaseModel):
     updated: datetime = None
     rates: list[Rate] = None
 
-    def update(self) -> None:
-        if not self.updated or datetime.today() - self.updated > timedelta(seconds=app.config['REQUEST_CACHE_TIMEOUT_SEC']):
-            try:
-                self.rates = [Rate(transfer=t) for t in transfers_to_monitor]
-                self.updated = datetime.today()
-            except Exception as e:
-                raise CantGetRates
 
-    def save_to_db(self):
+class RateStateHandler():
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
+
+        # Init special TinyDb serializer for datetime
+        # Overwise you cann't serialize obj with datetime fields 
+        self._db_serialization = SerializationMiddleware(JSONStorage)
+        self._db_serialization.register_serializer(DateTimeSerializer(), 'TinyDate')
+
+        self._db = TinyDB('db.json', storage=self._db_serialization)
+
+
+    def save_to_db(self, rate_state: RatesState) -> None:
         try:
-            serialization = SerializationMiddleware(JSONStorage)
-            serialization.register_serializer(DateTimeSerializer(), 'TinyDate')
-
-            db = TinyDB('db.json', storage=serialization)
-            db.insert(self.dict())
+            self._db.insert(rate_state.dict())
         except Exception as e:
-            raise SaveToDBError
+            raise SaveRatesToDBError
+
+    def get_state_from_db(self) -> RatesState:
+        try:
+            # get last obj from db
+            el = self._db.all()[-1]
+            return RatesState.parse_obj(el)
+        except Exception as e:
+            raise LoadRatesFromDBError
+
+    def get_state_from_api(self) -> RatesState:
+        # if not self.updated or datetime.today() - self.updated > timedelta(seconds=app.config['REQUEST_CACHE_TIMEOUT_SEC']):
+        try:
+            rates = [Rate(transfer=t) for t in transfers_to_monitor]
+            return RatesState(updated=datetime.today(), rates=rates)
+        except Exception as e:
+            raise CantGetRatesFromAPI
 
 
 transfers_to_monitor = [
@@ -134,5 +151,3 @@ transfers_to_monitor = [
         paid_notification_enabled=True,
         payment_method='debitCard',
         receiving_method='cash')]
-
-rates_state = RatesState()

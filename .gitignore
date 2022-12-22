@@ -127,5 +127,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-db.json
+db*.json
 .vscode/launch.json
+.DS_Store
