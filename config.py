@@ -19,3 +19,4 @@ class Config():
     REQUEST_CACHE_TIMEOUT_SEC = os.getenv(
         'REQUEST_CACHE_TIMEOUT') or 5*60
     DB = os.getenv('DB') or 'db.json'
+    RATES_STATE_STATS_DEPTH_DAYS = os.getenv('RATES_STATE_STATS_DEPTH_DAYS') or 31

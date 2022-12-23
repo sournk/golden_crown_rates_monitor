@@ -1,5 +1,4 @@
-from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta
 
 import requests
 from pydantic import BaseModel
@@ -86,7 +85,6 @@ class Rate(BaseModel):
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
-        self.get_current_rate()
 
 
 class RatesState(BaseModel):
@@ -99,12 +97,12 @@ class RatesStateHandler():
         super().__init__(**kwargs)
 
         # Init special TinyDb serializer for datetime
-        # Overwise you cann't serialize obj with datetime fields 
+        # Overwise you cann't serialize obj with datetime fields
         self._db_serialization = SerializationMiddleware(JSONStorage)
-        self._db_serialization.register_serializer(DateTimeSerializer(), 'TinyDate')
+        self._db_serialization.register_serializer(
+            DateTimeSerializer(), 'TinyDate')
 
-        self._db = TinyDB('db.json', storage=self._db_serialization)
-
+        self._db = TinyDB(app.config['DB'], storage=self._db_serialization)
 
     def save_to_db(self, rate_state: RatesState) -> None:
         try:
@@ -124,9 +122,55 @@ class RatesStateHandler():
         # if not self.updated or datetime.today() - self.updated > timedelta(seconds=app.config['REQUEST_CACHE_TIMEOUT_SEC']):
         try:
             rates = [Rate(transfer=t) for t in transfers_to_monitor]
+            for r in rates:
+                r.get_current_rate()
+
             return RatesState(updated=datetime.today(), rates=rates)
         except Exception as e:
             raise CantGetRatesFromAPI
+
+    def get_rates_state_list(self, depth_days: int = 31) -> list[RatesState]:
+
+        def _get_rates_state_list_from_db_by_period() -> list:
+            ''' 
+                Get all rates states from db by period. 
+                List includes rates for every hour or often (see crontab) 
+            '''
+            date_end = datetime.combine(datetime.today(), time.max)
+            date_start = date_end - timedelta(days=depth_days-1)
+            date_start = datetime.combine(date_start, time.min)
+
+            q = Query()
+            result_list = self._db.search(
+                (q.updated >= date_start) & (q.updated <= date_end))
+            return [RatesState.parse_obj(li) for li in result_list]
+
+        def _get_dict_of_max_rates_in_day(rate_state_list: list[RatesState]) -> dict[datetime.date, Rate]:
+            '''
+                Leaves in list only rates_state with max value for each currency
+            '''
+            # todo: list нужно отсортировать по дате, иначе возможны проблемы
+            rd = {}
+            for rs in rates_state_list:
+                day_rates = rd.get(rs.updated.date(), {})
+                for r in rs.rates:
+                    old_rate = day_rates.get(r.transfer.id, None)
+                    old_rate = old_rate.exchange_rate if old_rate != None else 0
+                    if r.exchange_rate > old_rate:
+                        day_rates[r.transfer.id] = r
+
+                rd[rs.updated.date()] = day_rates
+
+            return rd
+
+        rates_state_list = _get_rates_state_list_from_db_by_period()
+        rd = _get_dict_of_max_rates_in_day(rates_state_list)
+
+        # Now rd has dict of Rate by date
+        # Convert rd to list of RatesState
+        return [RatesState(
+            updated=datetime.combine(k, time.min),
+            rates=list(v.values())) for k, v in rd.items()]
 
 
 transfers_to_monitor = [
