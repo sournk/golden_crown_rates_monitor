@@ -1,3 +1,5 @@
+from flask import current_app
+
 from datetime import datetime, time, timedelta
 
 import requests
@@ -8,7 +10,6 @@ from tinydb.storages import JSONStorage
 from tinydb_serialization import SerializationMiddleware
 from tinydb_serialization.serializers import DateTimeSerializer
 
-from app import app
 from exceptions import CantGetRatesFromAPI, SaveRatesToDBError, LoadRatesFromDBError
 
 
@@ -36,7 +37,7 @@ class Rate(BaseModel):
     exchange_rate: float = 0.0
 
     def _get_current_rate_response(self) -> requests.Response:
-        url = app.config['KORONAPAY_TRANSFERS_TARIFFS_TEMPLATE_URL'].format(
+        url = current_app.config['KORONAPAY_TRANSFERS_TARIFFS_TEMPLATE_URL'].format(
             sending_currency_id=self.transfer.sending_currency_id,
             sending_country_id=self.transfer.sending_country_id,
             receiving_country_id=self.transfer.receiving_country_id,
@@ -49,7 +50,7 @@ class Rate(BaseModel):
 
         try:
             headers = {
-                'User-Agent': app.config['REQUEST_USER_AGENT']}
+                'User-Agent': current_app.config['REQUEST_USER_AGENT']}
             res = requests.get(url, headers=headers)
             if res.status_code != 200:
                 raise CantGetRatesFromAPI
@@ -102,7 +103,8 @@ class RatesStateHandler():
         self._db_serialization.register_serializer(
             DateTimeSerializer(), 'TinyDate')
 
-        self._db = TinyDB(app.config['DB'], storage=self._db_serialization)
+        self._db = TinyDB(
+            current_app.config['DB'], storage=self._db_serialization)
 
     def save_to_db(self, rate_state: RatesState) -> None:
         try:
