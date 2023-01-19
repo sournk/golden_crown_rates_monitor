@@ -20,3 +20,42 @@ class Config():
         'REQUEST_CACHE_TIMEOUT') or 5*60
     DB = os.getenv('DB') or 'db.json'
     RATES_STATE_STATS_DEPTH_DAYS = os.getenv('RATES_STATE_STATS_DEPTH_DAYS') or 31
+    LOG_CONFIG = {
+        "version": 1,
+        "disable_existing_loggers": True,
+        "formatters": {
+            "simple": {
+                "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+            }
+        },
+        "handlers": {
+            "stdout": {
+                "class": "logging.StreamHandler",
+                "formatter": "simple",
+                "stream": "ext://sys.stdout"
+            },
+            "file": {
+                "class": "logging.FileHandler",
+                "formatter": "simple",
+                "filename": "app.log",
+                "mode": "w"
+            },
+            "fileRotation": {
+                "class": "logging.handlers.RotatingFileHandler",
+                "formatter": "simple",
+                "filename": "app.log",
+                "maxBytes": 1024*1024,
+                "backupCount": 10
+            }
+        },
+        "loggers": {
+            "app": {
+                "level": "INFO",
+                "handlers": [
+                    "stdout",
+                    "fileRotation"
+                ]
+            }
+        }
+    }
+
