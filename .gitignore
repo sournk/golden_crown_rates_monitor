@@ -130,3 +130,5 @@ dmypy.json
 db*.json
 .vscode/launch.json
 .DS_Store
+*.bak
+*.csv

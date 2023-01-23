@@ -38,7 +38,7 @@ class Config():
                 "class": "logging.FileHandler",
                 "formatter": "simple",
                 "filename": "app.log",
-                "mode": "w"
+                "mode": "a"
             },
             "fileRotation": {
                 "class": "logging.handlers.RotatingFileHandler",
