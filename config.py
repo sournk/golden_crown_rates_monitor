@@ -45,7 +45,7 @@ class Config():
                 "formatter": "simple",
                 "filename": "app.log",
                 "maxBytes": 1024*1024,
-                "backupCount": 10
+                "backupCount": 10,
             }
         },
         "loggers": {
